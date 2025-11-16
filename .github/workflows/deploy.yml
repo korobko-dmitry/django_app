@@ -40,26 +40,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Kubeconfig
-        uses: azure/k8s-set-context@v3
-        with:
-          kubeconfig: ${{ secrets.KUBE_CONFIG }}
-      - name: Deploy to Kubernetes
-        run: |
-          # Создаем namespace если не существует
-          kubectl create namespace ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-          # Применяем манифесты
-          kubectl apply -f k8s-manifests/ -n ${{ env.K8S_NAMESPACE }}
-          # Обновляем образ в deployment
-          kubectl set image deployment/django-deployment django-app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -n ${{ env.K8S_NAMESPACE }}
-          # Ждем пока поды перезапустятся
-          kubectl rollout status deployment/django-deployment -n ${{ env.K8S_NAMESPACE }} --timeout=300s
-          # Показываем статус
-          kubectl get pods,svc,ingress -n ${{ env.K8S_NAMESPACE }}
