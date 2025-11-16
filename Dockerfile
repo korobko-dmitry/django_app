@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
     musl-dev \
-    postgresql-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Копирование requirements и установка Python зависимостей
